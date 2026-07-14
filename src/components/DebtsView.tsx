@@ -19,6 +19,7 @@ export function DebtsView() {
   const open = state.data.debts.filter((d) => !d.settled)
   const iOwe = open.filter((d) => d.direction === 'owe')
   const theyOwe = open.filter((d) => d.direction === 'owed')
+  const filtered = direction === 'owe' ? iOwe : theyOwe
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -97,49 +98,26 @@ export function DebtsView() {
         </button>
       </form>
 
-      {open.length === 0 ? (
+      {filtered.length === 0 ? (
         <p className="text-center text-[var(--color-mute)]">{t('noDebts', lang)}</p>
       ) : (
-        <>
-          {iOwe.length > 0 && (
-            <DebtGroup
-              title={t('iOwe', lang)}
-              color="var(--color-owe)"
-              items={iOwe}
-              lang={lang}
-              payingId={payingId}
-              payValue={payValue}
-              setPayValue={setPayValue}
-              onStartPay={startPay}
-              onConfirmPay={confirmPay}
-              onCancelPay={() => setPayingId(null)}
-              onDelete={deleteDebt}
-              onPayAll={(d) => {
-                payDebt(d.id, d.amount)
-                setPayingId(null)
-              }}
-            />
-          )}
-          {theyOwe.length > 0 && (
-            <DebtGroup
-              title={t('theyOwe', lang)}
-              color="var(--color-owed)"
-              items={theyOwe}
-              lang={lang}
-              payingId={payingId}
-              payValue={payValue}
-              setPayValue={setPayValue}
-              onStartPay={startPay}
-              onConfirmPay={confirmPay}
-              onCancelPay={() => setPayingId(null)}
-              onDelete={deleteDebt}
-              onPayAll={(d) => {
-                payDebt(d.id, d.amount)
-                setPayingId(null)
-              }}
-            />
-          )}
-        </>
+        <DebtGroup
+          title={direction === 'owe' ? t('iOwe', lang) : t('theyOwe', lang)}
+          color={direction === 'owe' ? 'var(--color-owe)' : 'var(--color-owed)'}
+          items={filtered}
+          lang={lang}
+          payingId={payingId}
+          payValue={payValue}
+          setPayValue={setPayValue}
+          onStartPay={startPay}
+          onConfirmPay={confirmPay}
+          onCancelPay={() => setPayingId(null)}
+          onDelete={deleteDebt}
+          onPayAll={(d) => {
+            payDebt(d.id, d.amount)
+            setPayingId(null)
+          }}
+        />
       )}
     </div>
   )

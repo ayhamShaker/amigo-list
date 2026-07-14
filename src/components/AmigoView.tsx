@@ -1,5 +1,5 @@
 import { Mic, MicOff, Send } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { askAmigo, speakText, stopSpeaking } from '../amigo'
 import { t } from '../i18n'
 import { useStore } from '../store'
@@ -32,14 +32,15 @@ function getSpeechRecognition(): SpeechCtor | null {
 }
 
 export function AmigoView() {
-  const { state, addChat, applyBatch, payDebt, addTodo, addDebt, addWishlist, addAlarm, setTab } =
+  const { state, addChat, applyBatch, payDebt, addTodo, addDebt, addWishlist, addAlarm, setTab, setChatDraft } =
     useStore()
   const lang = state.data.settings.lang
-  const [input, setInput] = useState('')
+  const input = state.chatDraft
   const [busy, setBusy] = useState(false)
   const [listening, setListening] = useState(false)
   const [speechError, setSpeechError] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recogRef = useRef<SpeechRecognitionLike | null>(null)
   const dataRef = useRef(state.data)
   const busyRef = useRef(false)
@@ -59,6 +60,13 @@ export function AmigoView() {
   }, [busy])
 
   useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 144)}px`
+  }, [input])
+
+  useEffect(() => {
     return () => {
       recogRef.current?.stop()
       stopSpeaking()
@@ -68,7 +76,7 @@ export function AmigoView() {
   const sendMessage = async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || busyRef.current) return
-    setInput('')
+    setChatDraft('')
     setSpeechError('')
     addChat('user', trimmed)
     setBusy(true)
@@ -143,6 +151,13 @@ export function AmigoView() {
     void sendMessage(input)
   }
 
+  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      void sendMessage(input)
+    }
+  }
+
   const toggleListen = () => {
     const SpeechCtor = getSpeechRecognition()
     if (!SpeechCtor) {
@@ -175,9 +190,9 @@ export function AmigoView() {
         if (r.isFinal) finalText += r[0].transcript
         else interim += r[0].transcript
       }
-      if (interim) setInput(interim)
+      if (interim) setChatDraft(interim)
       if (finalText.trim()) {
-        setInput(finalText.trim())
+        setChatDraft(finalText.trim())
         void sendMessage(finalText.trim())
       }
     }
@@ -235,7 +250,7 @@ export function AmigoView() {
         </button>
       )}
 
-      <form onSubmit={onSubmit} className="flex shrink-0 gap-2">
+      <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2">
         <button
           type="button"
           onClick={toggleListen}
@@ -249,11 +264,15 @@ export function AmigoView() {
         >
           {listening ? <MicOff size={18} /> : <Mic size={18} />}
         </button>
-        <input
+        <textarea
+          ref={textareaRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => setChatDraft(e.target.value)}
+          onKeyDown={onKeyDown}
           placeholder={t('chatPlaceholder', lang)}
           disabled={busy}
+          rows={2}
+          className="amigo-composer flex-1"
         />
         <button type="submit" className="btn btn-primary shrink-0 px-3" disabled={busy || !input.trim()}>
           <Send size={18} />

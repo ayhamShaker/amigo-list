@@ -16,6 +16,7 @@ const STORAGE_KEY = 'amigo-data-v1'
 type Action =
   | { type: 'HYDRATE'; data: AppData }
   | { type: 'SET_TAB'; tab: Tab }
+  | { type: 'SET_CHAT_DRAFT'; draft: string }
   | { type: 'ADD_TODO'; todo: Todo }
   | { type: 'TOGGLE_TODO'; id: string }
   | { type: 'DELETE_TODO'; id: string }
@@ -35,6 +36,7 @@ type Action =
 interface State {
   data: AppData
   tab: Tab
+  chatDraft: string
   ready: boolean
 }
 
@@ -99,6 +101,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, data: action.data, ready: true }
     case 'SET_TAB':
       return { ...state, tab: action.tab }
+    case 'SET_CHAT_DRAFT':
+      return { ...state, chatDraft: action.draft }
     case 'ADD_TODO':
       return { ...state, data: { ...state.data, todos: [action.todo, ...state.data.todos] } }
     case 'TOGGLE_TODO':
@@ -212,6 +216,7 @@ function reducer(state: State, action: Action): State {
 interface StoreCtx {
   state: State
   setTab: (tab: Tab) => void
+  setChatDraft: (draft: string) => void
   addTodo: (title: string, dueDate?: string) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
@@ -240,6 +245,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     data: emptyData(),
     tab: 'home' as Tab,
+    chatDraft: '',
     ready: false,
   })
 
@@ -258,6 +264,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [state.data, state.ready])
 
   const setTab = useCallback((tab: Tab) => dispatch({ type: 'SET_TAB', tab }), [])
+  const setChatDraft = useCallback((draft: string) => dispatch({ type: 'SET_CHAT_DRAFT', draft }), [])
   const addTodo = useCallback((title: string, dueDate?: string) => {
     dispatch({
       type: 'ADD_TODO',
@@ -340,6 +347,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value: StoreCtx = {
     state,
     setTab,
+    setChatDraft,
     addTodo,
     toggleTodo,
     deleteTodo,

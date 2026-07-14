@@ -134,10 +134,21 @@ select {
 }
 
 .flex > input.grow,
-.flex > input.flex-1 {
+.flex > input.flex-1,
+.flex > textarea.grow,
+.flex > textarea.flex-1 {
   flex: 1 1 0%;
   width: auto;
   min-width: 0;
+}
+
+textarea.amigo-composer {
+  min-height: 3.25rem;
+  max-height: 9rem;
+  resize: none;
+  line-height: 1.45;
+  font-size: 1rem;
+  padding: 0.85rem 1rem;
 }
 
 input:focus,
