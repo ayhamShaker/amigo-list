@@ -232,6 +232,7 @@ interface StoreCtx {
   addChat: (role: ChatMessage['role'], content: string) => void
   setSettings: (s: Partial<Settings>) => void
   applyBatch: (patch: Partial<Pick<AppData, 'todos' | 'debts' | 'wishlist' | 'alarms'>>) => void
+  importData: (raw: unknown) => boolean
   uid: () => string
 }
 
@@ -343,6 +344,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'APPLY_BATCH', patch }),
     [],
   )
+  const importData = useCallback((raw: unknown) => {
+    try {
+      if (!raw || typeof raw !== 'object') return false
+      const o = raw as Record<string, unknown>
+      if (!('settings' in o || 'todos' in o || 'debts' in o || 'wishlist' in o || 'alarms' in o || 'chat' in o)) {
+        return false
+      }
+      const data = migrate(raw)
+      dispatch({ type: 'HYDRATE', data })
+      return true
+    } catch {
+      return false
+    }
+  }, [])
 
   const value: StoreCtx = {
     state,
@@ -363,6 +378,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addChat,
     setSettings,
     applyBatch,
+    importData,
     uid,
   }
 

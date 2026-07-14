@@ -88,6 +88,23 @@ const dict = {
     en: 'Add AMIGO to your Home Screen: Share → Add to Home Screen',
   },
   settingsSaved: { ar: 'تم الحفظ', en: 'Saved' },
+  syncTitle: { ar: 'مزامنة اللابتوب والموبايل', en: 'Sync laptop & phone' },
+  syncHint: {
+    ar: 'كل جهاز لوحده. صدّر من جهاز واستورد بالثاني — المهام والديون والمفتاح يصيروا نفس الشي تماماً.',
+    en: 'Each device is separate. Export from one and import on the other — tasks, debts, and the API key become identical.',
+  },
+  exportData: { ar: 'تصدير نسخة كاملة', en: 'Export full backup' },
+  importData: { ar: 'استيراد نسخة', en: 'Import backup' },
+  copyData: { ar: 'نسخ للنقل (واتساب / ملاحظات)', en: 'Copy to transfer (WhatsApp / Notes)' },
+  pasteData: { ar: 'لصق واستيراد', en: 'Paste & import' },
+  exportDone: { ar: 'تم التصدير', en: 'Exported' },
+  copyDone: { ar: 'تم النسخ — الصق بالموبايل', en: 'Copied — paste on phone' },
+  importDone: { ar: 'تم الاستيراد — كل شي صار نفسه', en: 'Imported — everything matches' },
+  importFail: { ar: 'ما قدرت أقرأ النسخة — تأكد إنها من AMIGO', en: 'Couldn’t read backup — make sure it’s from AMIGO' },
+  importConfirm: {
+    ar: 'رح يستبدل كل البيانات الحالية (مهام، ديون، مفتاح…). متأكد؟',
+    en: 'This replaces all current data (tasks, debts, API key…). Continue?',
+  },
   needApiKey: {
     ar: 'حط مفتاح API من الإعدادات مشان أحكي معك',
     en: 'Add an API key in Settings so I can talk to you',

@@ -1,13 +1,21 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { t } from '../i18n'
 import { useStore } from '../store'
 import { CURRENCIES, type Lang } from '../types'
 
 export function SettingsView() {
-  const { state, setSettings } = useStore()
+  const { state, setSettings, importData } = useStore()
   const s = state.data.settings
   const [saved, setSaved] = useState(false)
   const [form, setForm] = useState({ ...s })
+  const [syncMsg, setSyncMsg] = useState('')
+  const [pasteText, setPasteText] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const flash = (msg: string) => {
+    setSyncMsg(msg)
+    window.setTimeout(() => setSyncMsg(''), 2500)
+  }
 
   const save = () => {
     setSettings(form)
@@ -22,6 +30,63 @@ export function SettingsView() {
     setSettings({ lang })
     document.documentElement.lang = lang
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
+  }
+
+  const runImport = (raw: unknown) => {
+    if (!window.confirm(t('importConfirm', s.lang))) return
+    const ok = importData(raw)
+    if (!ok) {
+      flash(t('importFail', s.lang))
+      return
+    }
+    flash(t('importDone', s.lang))
+    window.setTimeout(() => window.location.reload(), 400)
+  }
+
+  const exportFile = () => {
+    const blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `amigo-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    flash(t('exportDone', s.lang))
+  }
+
+  const copyAll = async () => {
+    const text = JSON.stringify(state.data)
+    try {
+      await navigator.clipboard.writeText(text)
+      flash(t('copyDone', s.lang))
+    } catch {
+      setPasteText(text)
+      flash(t('copyDone', s.lang))
+    }
+  }
+
+  const onImportFile = (file: File | undefined) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        runImport(JSON.parse(String(reader.result)))
+      } catch {
+        flash(t('importFail', s.lang))
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const onPasteImport = () => {
+    const trimmed = pasteText.trim()
+    if (!trimmed) return
+    try {
+      runImport(JSON.parse(trimmed))
+      setPasteText('')
+    } catch {
+      flash(t('importFail', s.lang))
+    }
   }
 
   return (
@@ -114,6 +179,49 @@ export function SettingsView() {
             placeholder="gpt-4o-mini"
           />
         </div>
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-[var(--color-accent)]/30 bg-[rgba(61,220,151,0.06)] p-4">
+        <p className="text-sm font-semibold">{t('syncTitle', s.lang)}</p>
+        <p className="text-xs text-[var(--color-mute)]">{t('syncHint', s.lang)}</p>
+        <div className="flex flex-col gap-2">
+          <button type="button" className="btn btn-primary w-full" onClick={exportFile}>
+            {t('exportData', s.lang)}
+          </button>
+          <button type="button" className="btn w-full border border-[var(--color-line)] bg-[var(--color-ink-3)]" onClick={copyAll}>
+            {t('copyData', s.lang)}
+          </button>
+          <button
+            type="button"
+            className="btn w-full border border-[var(--color-line)] bg-[var(--color-ink-3)]"
+            onClick={() => fileRef.current?.click()}
+          >
+            {t('importData', s.lang)}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              onImportFile(e.target.files?.[0])
+              e.target.value = ''
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            rows={3}
+            className="amigo-composer"
+            placeholder={s.lang === 'ar' ? 'الصق هنا النسخة المنسوخة من الجهاز الثاني…' : 'Paste the backup from the other device…'}
+          />
+          <button type="button" className="btn btn-primary w-full" onClick={onPasteImport} disabled={!pasteText.trim()}>
+            {t('pasteData', s.lang)}
+          </button>
+        </div>
+        {syncMsg && <p className="text-sm text-[var(--color-accent)]">{syncMsg}</p>}
       </section>
 
       <p className="text-xs text-[var(--color-mute)]">{t('installHint', s.lang)}</p>
