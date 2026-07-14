@@ -64,6 +64,9 @@ export interface Settings {
   apiModel: string
   userName: string
   voiceReplies: boolean
+  /** Shared secret — same on phone & laptop for one cloud dataset */
+  syncCode: string
+  syncEnabled: boolean
 }
 
 export interface AppData {
@@ -85,6 +88,8 @@ export const defaultSettings: Settings = {
   apiModel: 'gpt-4o-mini',
   userName: 'Ayham',
   voiceReplies: true,
+  syncCode: '',
+  syncEnabled: false,
 }
 
 export const emptyData = (): AppData => ({

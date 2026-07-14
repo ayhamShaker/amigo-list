@@ -89,11 +89,47 @@ export function SettingsView() {
     }
   }
 
+  const toggleSync = () => {
+    const syncCode = form.syncCode.trim()
+    if (!s.syncEnabled && !syncCode) {
+      flash(t('syncNeedCode', s.lang))
+      return
+    }
+    const syncEnabled = !s.syncEnabled
+    setForm((f) => ({ ...f, syncCode, syncEnabled }))
+    setSettings({ syncCode, syncEnabled })
+    flash(syncEnabled ? t('syncWorking', s.lang) : t('syncOff', s.lang))
+  }
+
   return (
     <div className="animate-in space-y-5">
       <header>
         <h1 className="text-2xl font-bold">{t('settings', s.lang)}</h1>
       </header>
+
+      <section className="space-y-3 rounded-2xl border border-[var(--color-accent)]/35 bg-[rgba(61,220,151,0.08)] p-4">
+        <p className="text-sm font-semibold">{t('syncTitle', s.lang)}</p>
+        <p className="text-xs text-[var(--color-mute)]">{t('syncHint', s.lang)}</p>
+        <div className="space-y-2">
+          <label className="text-xs text-[var(--color-mute)]">{t('syncCode', s.lang)}</label>
+          <input
+            value={form.syncCode}
+            onChange={(e) => setForm({ ...form, syncCode: e.target.value })}
+            onBlur={() => setSettings({ syncCode: form.syncCode.trim() })}
+            placeholder={t('syncCodePlaceholder', s.lang)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+        <button
+          type="button"
+          className={`btn w-full ${s.syncEnabled ? 'btn-primary' : 'border border-[var(--color-line)] bg-[var(--color-ink-3)]'}`}
+          onClick={toggleSync}
+        >
+          {s.syncEnabled ? t('syncOn', s.lang) : t('syncEnable', s.lang)}
+        </button>
+        {syncMsg && <p className="text-sm text-[var(--color-accent)]">{syncMsg}</p>}
+      </section>
 
       <section className="space-y-2">
         <label className="text-xs text-[var(--color-mute)]">{t('language', s.lang)}</label>
@@ -181,19 +217,20 @@ export function SettingsView() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-[var(--color-accent)]/30 bg-[rgba(61,220,151,0.06)] p-4">
-        <p className="text-sm font-semibold">{t('syncTitle', s.lang)}</p>
-        <p className="text-xs text-[var(--color-mute)]">{t('syncHint', s.lang)}</p>
-        <div className="flex flex-col gap-2">
-          <button type="button" className="btn btn-primary w-full" onClick={exportFile}>
+      <details className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-ink-2)] p-4">
+        <summary className="cursor-pointer text-sm text-[var(--color-mute)]">
+          {s.lang === 'ar' ? 'نسخة احتياطية يدوية (اختياري)' : 'Manual backup (optional)'}
+        </summary>
+        <div className="mt-3 flex flex-col gap-2">
+          <button type="button" className="btn border border-[var(--color-line)] bg-[var(--color-ink-3)]" onClick={exportFile}>
             {t('exportData', s.lang)}
           </button>
-          <button type="button" className="btn w-full border border-[var(--color-line)] bg-[var(--color-ink-3)]" onClick={copyAll}>
+          <button type="button" className="btn border border-[var(--color-line)] bg-[var(--color-ink-3)]" onClick={copyAll}>
             {t('copyData', s.lang)}
           </button>
           <button
             type="button"
-            className="btn w-full border border-[var(--color-line)] bg-[var(--color-ink-3)]"
+            className="btn border border-[var(--color-line)] bg-[var(--color-ink-3)]"
             onClick={() => fileRef.current?.click()}
           >
             {t('importData', s.lang)}
@@ -208,21 +245,18 @@ export function SettingsView() {
               e.target.value = ''
             }}
           />
-        </div>
-        <div className="space-y-2">
           <textarea
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
-            rows={3}
+            rows={2}
             className="amigo-composer"
-            placeholder={s.lang === 'ar' ? 'الصق هنا النسخة المنسوخة من الجهاز الثاني…' : 'Paste the backup from the other device…'}
+            placeholder={s.lang === 'ar' ? 'الصق نسخة هنا…' : 'Paste backup here…'}
           />
-          <button type="button" className="btn btn-primary w-full" onClick={onPasteImport} disabled={!pasteText.trim()}>
+          <button type="button" className="btn btn-primary" onClick={onPasteImport} disabled={!pasteText.trim()}>
             {t('pasteData', s.lang)}
           </button>
         </div>
-        {syncMsg && <p className="text-sm text-[var(--color-accent)]">{syncMsg}</p>}
-      </section>
+      </details>
 
       <p className="text-xs text-[var(--color-mute)]">{t('installHint', s.lang)}</p>
 

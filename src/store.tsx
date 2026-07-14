@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useReducer, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useReducer, useCallback, useRef, type ReactNode } from 'react'
+import { connectCloud, getSyncAt, pullCloud, pushCloud, setSyncAt } from './cloudSync'
 import {
   emptyData,
   type Alarm,
@@ -48,6 +49,8 @@ function migrate(raw: unknown): AppData {
     ...base.settings,
     ...((parsed.settings as Partial<Settings>) || {}),
   }
+  settings.syncCode = String(settings.syncCode || '')
+  settings.syncEnabled = Boolean(settings.syncEnabled)
 
   const debtsRaw = Array.isArray(parsed.debts) ? parsed.debts : []
   const debts: Debt[] = debtsRaw.map((d) => {
@@ -263,6 +266,116 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!state.ready) return
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data))
   }, [state.data, state.ready])
+
+  const applyingRemoteRef = useRef(false)
+  const skipPushRef = useRef(false)
+  const syncBootstrappedRef = useRef(false)
+  const dataRef = useRef(state.data)
+  dataRef.current = state.data
+
+  // Cloud sync: connect + poll
+  useEffect(() => {
+    if (!state.ready) return
+    const { syncEnabled, syncCode } = state.data.settings
+    const code = syncCode.trim()
+    if (!syncEnabled || !code) {
+      syncBootstrappedRef.current = false
+      return
+    }
+
+    let cancelled = false
+    syncBootstrappedRef.current = false
+
+    const applyRemote = (data: AppData, updatedAt: number) => {
+      applyingRemoteRef.current = true
+      skipPushRef.current = true
+      dispatch({ type: 'HYDRATE', data: migrate(data) })
+      setSyncAt(updatedAt)
+      queueMicrotask(() => {
+        applyingRemoteRef.current = false
+      })
+    }
+
+    ;(async () => {
+      try {
+        const result = await connectCloud(code, dataRef.current)
+        if (cancelled) return
+        if (result.source === 'remote') {
+          applyRemote(migrate(result.data), result.updatedAt)
+        } else {
+          setSyncAt(result.updatedAt)
+        }
+        syncBootstrappedRef.current = true
+      } catch {
+        syncBootstrappedRef.current = true
+      }
+    })()
+
+    const poll = window.setInterval(() => {
+      void (async () => {
+        if (cancelled || applyingRemoteRef.current || !syncBootstrappedRef.current) return
+        try {
+          const remote = await pullCloud(code)
+          if (!remote || cancelled) return
+          if (remote.updatedAt > getSyncAt()) {
+            applyRemote(migrate(remote.data), remote.updatedAt)
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
+    }, 4000)
+
+    const onFocus = () => {
+      void (async () => {
+        if (!syncBootstrappedRef.current) return
+        try {
+          const remote = await pullCloud(code)
+          if (!remote || cancelled) return
+          if (remote.updatedAt > getSyncAt()) {
+            applyRemote(migrate(remote.data), remote.updatedAt)
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
+    }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+
+    return () => {
+      cancelled = true
+      syncBootstrappedRef.current = false
+      window.clearInterval(poll)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [state.ready, state.data.settings.syncEnabled, state.data.settings.syncCode])
+
+  // Cloud sync: push local edits
+  useEffect(() => {
+    if (!state.ready) return
+    const { syncEnabled, syncCode } = state.data.settings
+    const code = syncCode.trim()
+    if (!syncEnabled || !code) return
+    if (!syncBootstrappedRef.current) return
+    if (skipPushRef.current) {
+      skipPushRef.current = false
+      return
+    }
+    if (applyingRemoteRef.current) return
+
+    const timer = window.setTimeout(() => {
+      if (!syncBootstrappedRef.current || applyingRemoteRef.current) return
+      void pushCloud(code, dataRef.current)
+        .then((at) => setSyncAt(at))
+        .catch(() => {
+          /* ignore */
+        })
+    }, 900)
+
+    return () => window.clearTimeout(timer)
+  }, [state.ready, state.data])
 
   const setTab = useCallback((tab: Tab) => dispatch({ type: 'SET_TAB', tab }), [])
   const setChatDraft = useCallback((draft: string) => dispatch({ type: 'SET_CHAT_DRAFT', draft }), [])
