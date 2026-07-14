@@ -32,13 +32,14 @@ function getSpeechRecognition(): SpeechCtor | null {
 }
 
 export function AmigoView() {
-  const { state, addChat, applyBatch, payDebt, addTodo, addDebt, addWishlist, addAlarm, setTab, setChatDraft } =
+  const { state, addChat, applyBatch, payDebt, addTodo, addDebt, addWishlist, addAlarm, setTab, setChatDraft, setListenPending } =
     useStore()
   const lang = state.data.settings.lang
   const input = state.chatDraft
   const [busy, setBusy] = useState(false)
   const [listening, setListening] = useState(false)
   const [speechError, setSpeechError] = useState('')
+  const [tapToTalk, setTapToTalk] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recogRef = useRef<SpeechRecognitionLike | null>(null)
@@ -72,6 +73,12 @@ export function AmigoView() {
       stopSpeaking()
     }
   }, [])
+
+  useEffect(() => {
+    if (!state.listenPending) return
+    setListenPending(false)
+    setTapToTalk(true)
+  }, [state.listenPending, setListenPending])
 
   const sendMessage = async (text: string) => {
     const trimmed = text.trim()
@@ -158,19 +165,17 @@ export function AmigoView() {
     }
   }
 
-  const toggleListen = () => {
+  const startListening = () => {
     const SpeechCtor = getSpeechRecognition()
     if (!SpeechCtor) {
       setSpeechError(t('speechUnsupported', lang))
       return
     }
-    if (listening) {
-      recogRef.current?.stop()
-      setListening(false)
-      return
-    }
+    if (listening) return
 
     stopSpeaking()
+    setTapToTalk(false)
+    setSpeechError('')
     const recog = new SpeechCtor()
     recogRef.current = recog
     recog.lang = lang === 'ar' ? 'ar-SA' : 'en-US'
@@ -203,8 +208,29 @@ export function AmigoView() {
     }
   }
 
+  const toggleListen = () => {
+    if (listening) {
+      recogRef.current?.stop()
+      setListening(false)
+      return
+    }
+    startListening()
+  }
+
   return (
     <div className="animate-in flex h-[calc(100dvh-8rem)] flex-col">
+      {tapToTalk && (
+        <button
+          type="button"
+          className="mb-3 flex shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--color-accent)]/40 bg-[rgba(61,220,151,0.12)] px-4 py-8"
+          onClick={() => startListening()}
+        >
+          <Mic size={36} className="text-[var(--color-accent)]" />
+          <span className="text-lg font-semibold">{t('tapToTalk', lang)}</span>
+          <span className="text-xs text-[var(--color-mute)]">{t('tapToTalkHint', lang)}</span>
+        </button>
+      )}
+
       <header className="mb-3 shrink-0">
         <p className="brand text-xs text-[var(--color-accent)]">AMIGO</p>
         <h1 className="text-2xl font-bold">{t('amigo', lang)}</h1>

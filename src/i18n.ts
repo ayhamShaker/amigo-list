@@ -84,8 +84,14 @@ const dict = {
   nothingPending: { ar: 'كل شي تمام — ما في شي معلّق', en: 'All clear — nothing pending' },
   remindYou: { ar: 'تذكير: عندك شغلات لسا ما عملتها', en: 'Reminder: you still have things to do' },
   installHint: {
-    ar: 'ضيف AMIGO للشاشة الرئيسية من Safari → مشاركة → Add to Home Screen',
-    en: 'Add AMIGO to your Home Screen: Share → Add to Home Screen',
+    ar: 'ضيف AMIGO للشاشة الرئيسية. على أندرويد: اضغط مطولاً على الأيقونة → «احكي» عشان تفتح المايك مباشرة.',
+    en: 'Add AMIGO to your Home Screen. On Android: long-press the icon → “Talk” to open the mic instantly.',
+  },
+  quickTalk: { ar: 'احكي مع AMIGO', en: 'Talk to AMIGO' },
+  tapToTalk: { ar: 'اضغط واحكي', en: 'Tap & talk' },
+  tapToTalkHint: {
+    ar: 'المتصفح ما بيسمع والم التطبيق مسكّر — كبسة وحدة هون وبتصير تمشي',
+    en: 'Browsers can’t listen with the app fully closed — one tap here and you’re set',
   },
   settingsSaved: { ar: 'تم الحفظ', en: 'Saved' },
   syncTitle: { ar: 'داتا واحدة — اللابتوب والموبايل', en: 'One data — laptop & phone' },

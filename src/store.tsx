@@ -18,6 +18,7 @@ type Action =
   | { type: 'HYDRATE'; data: AppData }
   | { type: 'SET_TAB'; tab: Tab }
   | { type: 'SET_CHAT_DRAFT'; draft: string }
+  | { type: 'SET_LISTEN_PENDING'; pending: boolean }
   | { type: 'ADD_TODO'; todo: Todo }
   | { type: 'TOGGLE_TODO'; id: string }
   | { type: 'DELETE_TODO'; id: string }
@@ -38,6 +39,7 @@ interface State {
   data: AppData
   tab: Tab
   chatDraft: string
+  listenPending: boolean
   ready: boolean
 }
 
@@ -106,6 +108,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, tab: action.tab }
     case 'SET_CHAT_DRAFT':
       return { ...state, chatDraft: action.draft }
+    case 'SET_LISTEN_PENDING':
+      return { ...state, listenPending: action.pending }
     case 'ADD_TODO':
       return { ...state, data: { ...state.data, todos: [action.todo, ...state.data.todos] } }
     case 'TOGGLE_TODO':
@@ -220,6 +224,7 @@ interface StoreCtx {
   state: State
   setTab: (tab: Tab) => void
   setChatDraft: (draft: string) => void
+  setListenPending: (pending: boolean) => void
   addTodo: (title: string, dueDate?: string) => void
   toggleTodo: (id: string) => void
   deleteTodo: (id: string) => void
@@ -250,6 +255,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     data: emptyData(),
     tab: 'home' as Tab,
     chatDraft: '',
+    listenPending: false,
     ready: false,
   })
 
@@ -379,6 +385,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const setTab = useCallback((tab: Tab) => dispatch({ type: 'SET_TAB', tab }), [])
   const setChatDraft = useCallback((draft: string) => dispatch({ type: 'SET_CHAT_DRAFT', draft }), [])
+  const setListenPending = useCallback(
+    (pending: boolean) => dispatch({ type: 'SET_LISTEN_PENDING', pending }),
+    [],
+  )
   const addTodo = useCallback((title: string, dueDate?: string) => {
     dispatch({
       type: 'ADD_TODO',
@@ -476,6 +486,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state,
     setTab,
     setChatDraft,
+    setListenPending,
     addTodo,
     toggleTodo,
     deleteTodo,

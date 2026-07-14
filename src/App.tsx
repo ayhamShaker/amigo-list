@@ -4,14 +4,18 @@ import { AmigoView } from './components/AmigoView'
 import { BottomNav } from './components/BottomNav'
 import { DebtsView } from './components/DebtsView'
 import { HomeView } from './components/HomeView'
+import { QuickTalkFab } from './components/QuickTalkFab'
 import { SettingsView } from './components/SettingsView'
 import { TodosView } from './components/TodosView'
 import { WishlistView } from './components/WishlistView'
 import { StoreProvider, useStore } from './store'
+import type { Tab } from './types'
 import { useAlarmWatcher } from './useAlarmWatcher'
 
+const TABS: Tab[] = ['home', 'todos', 'debts', 'wishlist', 'alarms', 'amigo', 'settings']
+
 function Shell() {
-  const { state } = useStore()
+  const { state, setTab, setListenPending } = useStore()
   useAlarmWatcher()
 
   useEffect(() => {
@@ -19,6 +23,23 @@ function Shell() {
     document.documentElement.lang = lang
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
   }, [state.data.settings.lang])
+
+  useEffect(() => {
+    if (!state.ready) return
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab')
+    const listen = params.get('listen')
+    if (tab && (TABS as string[]).includes(tab)) {
+      setTab(tab as Tab)
+    }
+    if (listen === '1') {
+      setListenPending(true)
+      if (!tab) setTab('amigo')
+    }
+    if (tab || listen) {
+      window.history.replaceState({}, '', window.location.pathname || '/')
+    }
+  }, [state.ready, setTab, setListenPending])
 
   if (!state.ready) {
     return (
@@ -52,6 +73,7 @@ function Shell() {
   return (
     <div className="app-shell safe-top">
       <main className="safe-bottom mx-auto w-full max-w-3xl px-4 pt-4">{view}</main>
+      <QuickTalkFab />
       <BottomNav />
     </div>
   )

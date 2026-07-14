@@ -20,6 +20,22 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         lang: 'ar',
+        shortcuts: [
+          {
+            name: 'احكي مع AMIGO',
+            short_name: 'احكي',
+            description: 'افتح المايك واطلب من AMIGO',
+            url: '/?tab=amigo&listen=1',
+            icons: [{ src: 'pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Talk to AMIGO',
+            short_name: 'Talk',
+            description: 'Open mic and talk to AMIGO',
+            url: '/?tab=amigo&listen=1',
+            icons: [{ src: 'pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
         icons: [
           {
             src: 'pwa-192.png',
