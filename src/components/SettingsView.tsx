@@ -82,7 +82,11 @@ export function SettingsView() {
             type="password"
             autoComplete="off"
             value={form.apiKey}
-            onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+            onChange={(e) => {
+              const apiKey = e.target.value
+              setForm({ ...form, apiKey })
+              setSettings({ apiKey })
+            }}
             placeholder="sk-…"
           />
         </div>
@@ -90,7 +94,11 @@ export function SettingsView() {
           <label className="text-xs text-[var(--color-mute)]">{t('apiBase', s.lang)}</label>
           <input
             value={form.apiBase}
-            onChange={(e) => setForm({ ...form, apiBase: e.target.value })}
+            onChange={(e) => {
+              const apiBase = e.target.value
+              setForm({ ...form, apiBase })
+              setSettings({ apiBase })
+            }}
             placeholder="https://api.openai.com/v1"
           />
         </div>
@@ -98,7 +106,11 @@ export function SettingsView() {
           <label className="text-xs text-[var(--color-mute)]">{t('apiModel', s.lang)}</label>
           <input
             value={form.apiModel}
-            onChange={(e) => setForm({ ...form, apiModel: e.target.value })}
+            onChange={(e) => {
+              const apiModel = e.target.value
+              setForm({ ...form, apiModel })
+              setSettings({ apiModel })
+            }}
             placeholder="gpt-4o-mini"
           />
         </div>
