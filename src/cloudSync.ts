@@ -97,3 +97,15 @@ export async function connectCloud(
   const updatedAt = await pushCloud(syncCode, local)
   return { data: local, updatedAt, source: 'local' }
 }
+
+export async function cloudNamespace(syncCode: string): Promise<string | null> {
+  const code = syncCode.trim()
+  if (!code) return null
+  return nsFromCode(code)
+}
+
+export async function cloudStateUrl(syncCode: string): Promise<string | null> {
+  const ns = await cloudNamespace(syncCode)
+  if (!ns) return null
+  return `${MANTLE}/${ns}/state`
+}

@@ -218,13 +218,9 @@ export function AmigoView() {
   }
 
   return (
-    <div className="animate-in flex h-[calc(100dvh-8rem)] flex-col">
+    <div className="amigo-screen animate-in">
       {tapToTalk && (
-        <button
-          type="button"
-          className="mb-3 flex shrink-0 flex-col items-center justify-center gap-2 rounded-2xl border border-[var(--color-accent)]/40 bg-[rgba(61,220,151,0.12)] px-4 py-8"
-          onClick={() => startListening()}
-        >
+        <button type="button" className="talk-hero mb-3 shrink-0" onClick={() => startListening()}>
           <Mic size={36} className="text-[var(--color-accent)]" />
           <span className="text-lg font-semibold">{t('tapToTalk', lang)}</span>
           <span className="text-xs text-[var(--color-mute)]">{t('tapToTalkHint', lang)}</span>
@@ -233,7 +229,7 @@ export function AmigoView() {
 
       <header className="mb-3 shrink-0">
         <p className="brand text-xs text-[var(--color-accent)]">AMIGO</p>
-        <h1 className="text-2xl font-bold">{t('amigo', lang)}</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">{t('amigo', lang)}</h1>
         <p className="text-sm text-[var(--color-mute)]">{t('tagline', lang)}</p>
       </header>
 

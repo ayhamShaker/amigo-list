@@ -84,15 +84,21 @@ const dict = {
   nothingPending: { ar: 'كل شي تمام — ما في شي معلّق', en: 'All clear — nothing pending' },
   remindYou: { ar: 'تذكير: عندك شغلات لسا ما عملتها', en: 'Reminder: you still have things to do' },
   installHint: {
-    ar: 'ضيف AMIGO للشاشة الرئيسية. على أندرويد: اضغط مطولاً على الأيقونة → «احكي» عشان تفتح المايك مباشرة.',
-    en: 'Add AMIGO to your Home Screen. On Android: long-press the icon → “Talk” to open the mic instantly.',
+    ar: 'ثبّت AMIGO على الشاشة الرئيسية لمظهر تطبيق. الزر الأخضر الوسط = احكي فوراً.',
+    en: 'Add AMIGO to Home Screen for app-like use. The green center button = talk instantly.',
   },
   quickTalk: { ar: 'احكي مع AMIGO', en: 'Talk to AMIGO' },
+  quickTalkShort: { ar: 'احكي', en: 'Talk' },
+  quickTalkHomeHint: {
+    ar: 'كبسة وحدة — وAMIGO بيسمعك وينفّذ',
+    en: 'One tap — AMIGO listens and acts',
+  },
   tapToTalk: { ar: 'اضغط واحكي', en: 'Tap & talk' },
   tapToTalkHint: {
-    ar: 'المتصفح ما بيسمع والم التطبيق مسكّر — كبسة وحدة هون وبتصير تمشي',
-    en: 'Browsers can’t listen with the app fully closed — one tap here and you’re set',
+    ar: 'اسمح للمايك بعد الكبسة، وبعدين احكي طلبك',
+    en: 'Allow the mic after tapping, then say your request',
   },
+  more: { ar: 'المزيد', en: 'More' },
   settingsSaved: { ar: 'تم الحفظ', en: 'Saved' },
   syncTitle: { ar: 'داتا واحدة — اللابتوب والموبايل', en: 'One data — laptop & phone' },
   syncHint: {
@@ -106,6 +112,21 @@ const dict = {
   syncOff: { ar: 'المزامنة موقوفة', en: 'Sync off' },
   syncWorking: { ar: 'عم يصلّح الاتصال…', en: 'Connecting…' },
   syncNeedCode: { ar: 'اكتب رمز سري أولاً (نفسه على الجهازين)', en: 'Enter a secret code first (same on both devices)' },
+  iosWidgetTitle: { ar: 'ودجت الآيفون (مهام + ديون)', en: 'iPhone widget (tasks + debts)' },
+  iosWidgetHint: {
+    ar: 'الويب ما بيدعم ودجت أصلي. الحل: تطبيق Scriptable المجاني يقرأ مزامنتك ويعرض المهام والديون على الشاشة الرئيسية.',
+    en: 'The web app can’t make a native widget. Use free Scriptable to show tasks & debts on your Home Screen from your sync.',
+  },
+  iosWidgetSteps: {
+    ar: '١) فعّل المزامنة فوق ٢) نزّل Scriptable من App Store ٣) انسخ السكربت والصقه بسكربت جديد ٤) من الشاشة الرئيسية: Add Widget → Scriptable → Medium',
+    en: '1) Enable sync above 2) Install Scriptable 3) Copy script into a new Scriptable script 4) Home Screen: Add Widget → Scriptable → Medium',
+  },
+  iosWidgetCopy: { ar: 'نسخ سكربت الودجت', en: 'Copy widget script' },
+  iosWidgetNeedSync: {
+    ar: 'فعّل المزامنة ورمز سري أولاً مشان الودجت يقرأ الداتا',
+    en: 'Enable sync + a secret code first so the widget can read your data',
+  },
+  iosWidgetCopied: { ar: 'تم النسخ — الصق بـ Scriptable', en: 'Copied — paste into Scriptable' },
   exportData: { ar: 'تصدير نسخة احتياطية', en: 'Export backup' },
   importData: { ar: 'استيراد نسخة احتياطية', en: 'Import backup' },
   copyData: { ar: 'نسخ للنقل', en: 'Copy to transfer' },

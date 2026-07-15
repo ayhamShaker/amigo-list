@@ -1,69 +1,122 @@
-import {
-  Bell,
-  CheckSquare,
-  Home,
-  MessageCircle,
-  Settings,
-  Sparkles,
-  Wallet,
-} from 'lucide-react'
+import { Bell, CheckSquare, Home, Menu, Mic, Settings, Sparkles, Wallet, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { t } from '../i18n'
 import { useStore } from '../store'
 import type { Tab } from '../types'
 
-const items: {
-  id: Tab
-  icon: typeof Home
-  labelKey: 'home' | 'todos' | 'debts' | 'wishlist' | 'alarms' | 'amigo'
-}[] = [
+const primary: { id: Tab; icon: typeof Home; labelKey: 'home' | 'todos' | 'debts' }[] = [
   { id: 'home', icon: Home, labelKey: 'home' },
   { id: 'todos', icon: CheckSquare, labelKey: 'todos' },
   { id: 'debts', icon: Wallet, labelKey: 'debts' },
+]
+
+const moreItems: { id: Tab; icon: typeof Home; labelKey: 'wishlist' | 'alarms' | 'settings' }[] = [
   { id: 'wishlist', icon: Sparkles, labelKey: 'wishlist' },
   { id: 'alarms', icon: Bell, labelKey: 'alarms' },
-  { id: 'amigo', icon: MessageCircle, labelKey: 'amigo' },
+  { id: 'settings', icon: Settings, labelKey: 'settings' },
 ]
 
 export function BottomNav() {
-  const { state, setTab } = useStore()
+  const { state, setTab, setListenPending } = useStore()
   const lang = state.data.settings.lang
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreActive = moreItems.some((x) => x.id === state.tab)
+
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [state.tab])
+
+  const goTalk = () => {
+    setListenPending(true)
+    setTab('amigo')
+  }
 
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-40 glass"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-    >
-      <div className="mx-auto flex max-w-3xl items-stretch justify-between px-1 pt-2 pb-2">
-        {items.map(({ id, icon: Icon, labelKey }) => {
-          const active = state.tab === id
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTab(id)}
-              className={`nav-item flex flex-1 flex-col items-center gap-0.5 py-1 text-[10px] ${
-                active ? 'active text-[var(--color-accent)]' : 'text-[var(--color-mute)]'
-              }`}
-            >
-              <span className="relative">
-                <Icon size={20} strokeWidth={active ? 2.4 : 1.8} />
-                <span className="nav-dot absolute -bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-[var(--color-accent)] opacity-0 transition" />
-              </span>
-              <span className="font-medium">{t(labelKey, lang)}</span>
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          onClick={() => setTab('settings')}
-          className={`nav-item flex w-10 flex-col items-center gap-0.5 py-1 text-[10px] ${
-            state.tab === 'settings' ? 'active text-[var(--color-accent)]' : 'text-[var(--color-mute)]'
-          }`}
-          aria-label={t('settings', lang)}
-        >
-          <Settings size={18} strokeWidth={state.tab === 'settings' ? 2.4 : 1.8} />
-        </button>
-      </div>
-    </nav>
+    <>
+      {moreOpen && (
+        <div className="fixed inset-0 z-45" onClick={() => setMoreOpen(false)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            className="glass absolute inset-x-0 bottom-0 rounded-t-3xl p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold">{t('more', lang)}</p>
+              <button type="button" className="btn btn-ghost p-2" onClick={() => setMoreOpen(false)} aria-label={t('cancel', lang)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {moreItems.map(({ id, icon: Icon, labelKey }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`row-card flex flex-col items-center gap-2 py-4 ${
+                    state.tab === id ? 'border-[var(--color-accent)]/40' : ''
+                  }`}
+                  onClick={() => {
+                    setTab(id)
+                    setMoreOpen(false)
+                  }}
+                >
+                  <Icon size={22} className="text-[var(--color-accent)]" />
+                  <span className="text-xs font-medium">{t(labelKey, lang)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <nav className="bottom-nav glass" aria-label="AMIGO">
+        <div className="bottom-nav-inner">
+          {primary.slice(0, 2).map(({ id, icon: Icon, labelKey }) => {
+            const active = state.tab === id
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={`nav-item ${active ? 'active' : ''}`}
+              >
+                <Icon size={22} strokeWidth={active ? 2.4 : 1.8} />
+                <span>{t(labelKey, lang)}</span>
+              </button>
+            )
+          })}
+
+          <button type="button" className="nav-amigo" onClick={goTalk} aria-label={t('quickTalk', lang)}>
+            <span className="nav-amigo-btn">
+              <Mic size={26} strokeWidth={2.4} />
+            </span>
+            <span className="nav-amigo-label">{t('quickTalkShort', lang)}</span>
+          </button>
+
+          {primary.slice(2).map(({ id, icon: Icon, labelKey }) => {
+            const active = state.tab === id
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                className={`nav-item ${active ? 'active' : ''}`}
+              >
+                <Icon size={22} strokeWidth={active ? 2.4 : 1.8} />
+                <span>{t(labelKey, lang)}</span>
+              </button>
+            )
+          })}
+
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            className={`nav-item ${moreActive || moreOpen ? 'active' : ''}`}
+          >
+            <Menu size={22} strokeWidth={moreActive || moreOpen ? 2.4 : 1.8} />
+            <span>{t('more', lang)}</span>
+          </button>
+        </div>
+      </nav>
+    </>
   )
 }

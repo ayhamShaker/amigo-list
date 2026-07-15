@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
+import { cloudStateUrl } from '../cloudSync'
 import { t } from '../i18n'
+import { buildScriptableWidget } from '../scriptableWidget'
 import { useStore } from '../store'
 import { CURRENCIES, type Lang } from '../types'
 
@@ -15,6 +17,26 @@ export function SettingsView() {
   const flash = (msg: string) => {
     setSyncMsg(msg)
     window.setTimeout(() => setSyncMsg(''), 2500)
+  }
+
+  const copyIosWidget = async () => {
+    const code = (form.syncCode || s.syncCode).trim()
+    if (!s.syncEnabled || !code) {
+      flash(t('iosWidgetNeedSync', s.lang))
+      return
+    }
+    try {
+      const url = await cloudStateUrl(code)
+      if (!url) {
+        flash(t('iosWidgetNeedSync', s.lang))
+        return
+      }
+      const script = buildScriptableWidget(url, window.location.origin)
+      await navigator.clipboard.writeText(script)
+      flash(t('iosWidgetCopied', s.lang))
+    } catch {
+      flash(t('iosWidgetNeedSync', s.lang))
+    }
   }
 
   const save = () => {
@@ -129,6 +151,15 @@ export function SettingsView() {
           {s.syncEnabled ? t('syncOn', s.lang) : t('syncEnable', s.lang)}
         </button>
         {syncMsg && <p className="text-sm text-[var(--color-accent)]">{syncMsg}</p>}
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-ink-2)] p-4">
+        <p className="text-sm font-semibold">{t('iosWidgetTitle', s.lang)}</p>
+        <p className="text-xs leading-relaxed text-[var(--color-mute)]">{t('iosWidgetHint', s.lang)}</p>
+        <p className="text-xs leading-relaxed text-[var(--color-mute)]">{t('iosWidgetSteps', s.lang)}</p>
+        <button type="button" className="btn btn-primary w-full" onClick={() => void copyIosWidget()}>
+          {t('iosWidgetCopy', s.lang)}
+        </button>
       </section>
 
       <section className="space-y-2">

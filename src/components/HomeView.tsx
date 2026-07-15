@@ -1,10 +1,10 @@
-import { ArrowUpRight, Bell, CheckSquare, Sparkles, Wallet } from 'lucide-react'
+import { ArrowUpRight, Bell, CheckSquare, Mic, Sparkles, Wallet } from 'lucide-react'
 import { t } from '../i18n'
 import { useStore } from '../store'
 import { formatRelative, formatWhen } from '../utils'
 
 export function HomeView() {
-  const { state, setTab } = useStore()
+  const { state, setTab, setListenPending } = useStore()
   const { lang, userName } = state.data.settings
   const pendingTodos = state.data.todos.filter((x) => !x.done)
   const openDebts = state.data.debts.filter((x) => !x.settled)
@@ -17,21 +17,31 @@ export function HomeView() {
     pendingTodos.length + openDebts.length + openWish.length + (nextAlarm ? 1 : 0) > 0
 
   return (
-    <div className="animate-in space-y-6">
-      <header className="pt-2">
-        <p className="brand text-sm text-[var(--color-accent)]">AMIGO</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">
+    <div className="animate-in space-y-5">
+      <header>
+        <p className="brand text-xs text-[var(--color-accent)]">AMIGO</p>
+        <h1 className="mt-1 text-[1.75rem] font-bold leading-tight tracking-tight">
           {lang === 'ar' ? `أهلاً ${userName}` : `Hey ${userName}`}
         </h1>
-        <p className="mt-1 text-[var(--color-mute)]">{t('tagline', lang)}</p>
+        <p className="mt-1 text-sm text-[var(--color-mute)]">{t('tagline', lang)}</p>
       </header>
+
+      <button
+        type="button"
+        className="talk-hero"
+        onClick={() => {
+          setListenPending(true)
+          setTab('amigo')
+        }}
+      >
+        <Mic size={28} className="text-[var(--color-accent)]" />
+        <span className="text-base font-bold">{t('quickTalk', lang)}</span>
+        <span className="text-xs text-[var(--color-mute)]">{t('quickTalkHomeHint', lang)}</span>
+      </button>
 
       {!hasAnything ? (
         <div className="row-card text-center">
-          <p className="text-[var(--color-mute)]">{t('nothingPending', lang)}</p>
-          <button type="button" className="btn btn-primary mt-4" onClick={() => setTab('amigo')}>
-            AMIGO
-          </button>
+          <p className="text-sm text-[var(--color-mute)]">{t('nothingPending', lang)}</p>
         </div>
       ) : (
         <div className="row-card border-[var(--color-accent)]/20 bg-[rgba(61,220,151,0.06)]">
@@ -40,10 +50,10 @@ export function HomeView() {
       )}
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--color-mute)]">
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-mute)]">
           {t('overview', lang)}
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <Stat
             icon={CheckSquare}
             label={t('todos', lang)}
@@ -66,9 +76,7 @@ export function HomeView() {
             icon={Bell}
             label={t('nextAlarm', lang)}
             value={
-              nextAlarm
-                ? `${nextAlarm.title} · ${formatRelative(nextAlarm.at, lang)}`
-                : '—'
+              nextAlarm ? `${nextAlarm.title} · ${formatRelative(nextAlarm.at, lang)}` : '—'
             }
             onClick={() => setTab('alarms')}
           />
@@ -77,8 +85,8 @@ export function HomeView() {
 
       {pendingTodos.length > 0 && (
         <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-mute)]">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-mute)]">
               {t('todos', lang)}
             </h2>
             <button
@@ -93,7 +101,7 @@ export function HomeView() {
             {pendingTodos.slice(0, 5).map((todo) => (
               <li key={todo.id} className="row-card flex items-center gap-3">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-warn)]" />
-                <span className="flex-1">{todo.title}</span>
+                <span className="flex-1 text-sm">{todo.title}</span>
               </li>
             ))}
           </ul>
@@ -108,7 +116,9 @@ export function HomeView() {
         </section>
       )}
 
-      <p className="text-center text-xs text-[var(--color-mute)] opacity-70">{t('installHint', lang)}</p>
+      <p className="pb-2 text-center text-[11px] leading-relaxed text-[var(--color-mute)] opacity-80">
+        {t('installHint', lang)}
+      </p>
     </div>
   )
 }
@@ -125,7 +135,7 @@ function Stat({
   onClick: () => void
 }) {
   return (
-    <button type="button" onClick={onClick} className="row-card text-start transition hover:border-[var(--color-accent)]/40">
+    <button type="button" onClick={onClick} className="row-card min-h-[5.5rem] text-start">
       <Icon size={16} className="text-[var(--color-accent)]" />
       <p className="mt-2 text-xs text-[var(--color-mute)]">{label}</p>
       <p className="mt-0.5 line-clamp-2 text-sm font-semibold">{value}</p>

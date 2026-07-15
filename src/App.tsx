@@ -4,7 +4,6 @@ import { AmigoView } from './components/AmigoView'
 import { BottomNav } from './components/BottomNav'
 import { DebtsView } from './components/DebtsView'
 import { HomeView } from './components/HomeView'
-import { QuickTalkFab } from './components/QuickTalkFab'
 import { SettingsView } from './components/SettingsView'
 import { TodosView } from './components/TodosView'
 import { WishlistView } from './components/WishlistView'
@@ -72,8 +71,7 @@ function Shell() {
 
   return (
     <div className="app-shell safe-top">
-      <main className="safe-bottom mx-auto w-full max-w-3xl px-4 pt-4">{view}</main>
-      <QuickTalkFab />
+      <main className="page">{view}</main>
       <BottomNav />
     </div>
   )
