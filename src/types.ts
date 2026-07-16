@@ -41,12 +41,16 @@ export type Expense = WishlistItem & {
   dueDate?: string
 }
 
+export type AlarmRepeat = 'none' | 'daily' | 'weekly'
+
 export interface Alarm {
   id: string
   title: string
   at: string
   fired: boolean
   createdAt: string
+  /** none by default; daily/weekly re-arm after firing */
+  repeat?: AlarmRepeat
 }
 
 export interface ChatMessage {
@@ -64,6 +68,8 @@ export interface Settings {
   apiModel: string
   userName: string
   voiceReplies: boolean
+  /** Launch straight into the talk screen with the composer focused */
+  openOnTalk: boolean
   /** Shared secret — same on phone & laptop for one cloud dataset */
   syncCode: string
   syncEnabled: boolean
@@ -88,6 +94,7 @@ export const defaultSettings: Settings = {
   apiModel: 'gpt-4o-mini',
   userName: 'Ayham',
   voiceReplies: true,
+  openOnTalk: true,
   syncCode: '',
   syncEnabled: false,
 }

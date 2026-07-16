@@ -146,6 +146,28 @@ const dict = {
   in2h: { ar: 'بعد ساعتين', en: 'In 2 hours' },
   in1h: { ar: 'بعد ساعة', en: 'In 1 hour' },
   in30m: { ar: 'بعد ٣٠ دقيقة', en: 'In 30 min' },
+  repeatLabel: { ar: 'التكرار', en: 'Repeat' },
+  repeatNone: { ar: 'مرة وحدة', en: 'Once' },
+  repeatDaily: { ar: 'كل يوم', en: 'Daily' },
+  repeatWeekly: { ar: 'كل أسبوع', en: 'Weekly' },
+  addToCalendar: { ar: 'أضف لتقويم الآيفون', en: 'Add to iPhone Calendar' },
+  calendarHint: {
+    ar: 'مشان المنبه يرنّ حتى والتطبيق مسكّر: اضغط 📅 جنب التنبيه ليتضاف لتقويم الآيفون مع إشعار.',
+    en: 'For the alarm to ring even when the app is closed: tap 📅 next to it to add it to the iPhone Calendar with an alert.',
+  },
+  snooze5: { ar: 'غفوة ٥ دقائق', en: 'Snooze 5 min' },
+  snooze10: { ar: 'غفوة ١٠ دقائق', en: 'Snooze 10 min' },
+  dismiss: { ar: 'تمام، أوقفه', en: 'Dismiss' },
+  iosTalkHint: {
+    ar: 'اضغط على مربع الكتابة، بعدين اضغط زر المايك 🎤 بلوحة المفاتيح واحكي — وبعدها إرسال.',
+    en: 'Tap the text box, then tap the mic 🎤 on the keyboard and speak — then Send.',
+  },
+  tapMicKeyboard: { ar: 'افتح لوحة المفاتيح واحكي', en: 'Open keyboard & talk' },
+  openOnTalk: { ar: 'افتح على شاشة الحكي مباشرة', en: 'Open straight to the talk screen' },
+  openOnTalkHint: {
+    ar: 'أول ما تفتح AMIGO بتلاقي حالك جاهز تحكي — بدون ما تدور.',
+    en: 'AMIGO opens ready for you to talk — no navigating.',
+  },
 } as const
 
 export type DictKey = keyof typeof dict

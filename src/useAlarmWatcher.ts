@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useStore } from './store'
 
 export function useAlarmWatcher() {
-  const { state, fireAlarm } = useStore()
+  const { state, fireAlarm, setRinging } = useStore()
   const notified = useRef(new Set<string>())
 
   useEffect(() => {
@@ -15,37 +15,36 @@ export function useAlarmWatcher() {
     const tick = () => {
       const now = Date.now()
       for (const alarm of state.data.alarms) {
-        if (alarm.fired || notified.current.has(alarm.id)) continue
+        if (alarm.fired) continue
+        // Key by id+time so a re-armed repeating alarm can fire again later
+        const key = `${alarm.id}:${alarm.at}`
+        if (notified.current.has(key)) continue
         const at = new Date(alarm.at).getTime()
         if (at <= now) {
-          notified.current.add(alarm.id)
-          fireAlarm(alarm.id)
+          notified.current.add(key)
+
           if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('AMIGO', {
-              body: alarm.title,
-              icon: '/pwa-192.png',
-              tag: alarm.id,
-            })
+            try {
+              new Notification('AMIGO', {
+                body: alarm.title,
+                icon: '/pwa-192.png',
+                tag: alarm.id,
+              })
+            } catch {
+              /* ignore */
+            }
           }
-          try {
-            const ctx = new AudioContext()
-            const o = ctx.createOscillator()
-            const g = ctx.createGain()
-            o.connect(g)
-            g.connect(ctx.destination)
-            o.frequency.value = 880
-            g.gain.value = 0.08
-            o.start()
-            o.stop(ctx.currentTime + 0.25)
-          } catch {
-            /* ignore */
-          }
+
+          // Show the full-screen ringing overlay (handles sound + vibration + snooze)
+          setRinging(alarm.id)
+          // Re-arm repeats / retire one-shots
+          fireAlarm(alarm.id)
         }
       }
     }
 
     tick()
-    const id = window.setInterval(tick, 5000)
+    const id = window.setInterval(tick, 3000)
     return () => clearInterval(id)
-  }, [state.data.alarms, fireAlarm])
+  }, [state.data.alarms, fireAlarm, setRinging])
 }

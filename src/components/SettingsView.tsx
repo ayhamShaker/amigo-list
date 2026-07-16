@@ -205,6 +205,24 @@ export function SettingsView() {
         </button>
       </section>
 
+      <section className="row-card flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <p className="text-sm">{t('openOnTalk', s.lang)}</p>
+          <p className="mt-0.5 text-xs text-[var(--color-mute)]">{t('openOnTalkHint', s.lang)}</p>
+        </div>
+        <button
+          type="button"
+          className={`chip ${form.openOnTalk ? 'on' : ''}`}
+          onClick={() => {
+            const openOnTalk = !form.openOnTalk
+            setForm({ ...form, openOnTalk })
+            setSettings({ openOnTalk })
+          }}
+        >
+          {form.openOnTalk ? (s.lang === 'ar' ? 'تشغيل' : 'On') : s.lang === 'ar' ? 'إطفاء' : 'Off'}
+        </button>
+      </section>
+
       <section className="space-y-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-ink-2)] p-4">
         <p className="brand text-sm text-[var(--color-accent)]">AMIGO API</p>
         <p className="text-xs text-[var(--color-mute)]">{t('apiHint', s.lang)}</p>

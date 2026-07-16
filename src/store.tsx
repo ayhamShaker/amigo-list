@@ -30,7 +30,9 @@ type Action =
   | { type: 'DELETE_WISHLIST'; id: string }
   | { type: 'ADD_ALARM'; alarm: Alarm }
   | { type: 'FIRE_ALARM'; id: string }
+  | { type: 'SNOOZE_ALARM'; id: string; at: string }
   | { type: 'DELETE_ALARM'; id: string }
+  | { type: 'SET_RINGING'; id: string | null }
   | { type: 'ADD_CHAT'; message: ChatMessage }
   | { type: 'SET_SETTINGS'; settings: Partial<Settings> }
   | { type: 'APPLY_BATCH'; patch: Partial<Pick<AppData, 'todos' | 'debts' | 'wishlist' | 'alarms'>> }
@@ -41,6 +43,20 @@ interface State {
   chatDraft: string
   listenPending: boolean
   ready: boolean
+  /** Id of the alarm currently ringing (full-screen overlay), if any */
+  ringingAlarmId: string | null
+}
+
+function nextOccurrence(iso: string, repeat: 'daily' | 'weekly'): string {
+  const base = new Date(iso).getTime()
+  const step = repeat === 'daily' ? 86_400_000 : 7 * 86_400_000
+  let next = base
+  const now = Date.now()
+  // advance until strictly in the future
+  do {
+    next += step
+  } while (next <= now)
+  return new Date(next).toISOString()
 }
 
 function migrate(raw: unknown): AppData {
@@ -181,14 +197,33 @@ function reducer(state: State, action: Action): State {
         ...state,
         data: {
           ...state.data,
+          alarms: state.data.alarms.map((a) => {
+            if (a.id !== action.id) return a
+            // Repeating alarms re-arm to their next occurrence instead of retiring
+            if (a.repeat === 'daily' || a.repeat === 'weekly') {
+              return { ...a, fired: false, at: nextOccurrence(a.at, a.repeat) }
+            }
+            return { ...a, fired: true }
+          }),
+        },
+      }
+    case 'SNOOZE_ALARM':
+      return {
+        ...state,
+        ringingAlarmId: state.ringingAlarmId === action.id ? null : state.ringingAlarmId,
+        data: {
+          ...state.data,
           alarms: state.data.alarms.map((a) =>
-            a.id === action.id ? { ...a, fired: true } : a,
+            a.id === action.id ? { ...a, fired: false, at: action.at } : a,
           ),
         },
       }
+    case 'SET_RINGING':
+      return { ...state, ringingAlarmId: action.id }
     case 'DELETE_ALARM':
       return {
         ...state,
+        ringingAlarmId: state.ringingAlarmId === action.id ? null : state.ringingAlarmId,
         data: {
           ...state.data,
           alarms: state.data.alarms.filter((a) => a.id !== action.id),
@@ -234,9 +269,11 @@ interface StoreCtx {
   addWishlist: (title: string, note?: string) => void
   toggleWishlist: (id: string) => void
   deleteWishlist: (id: string) => void
-  addAlarm: (title: string, at: string) => void
+  addAlarm: (title: string, at: string, repeat?: Alarm['repeat']) => void
   fireAlarm: (id: string) => void
+  snoozeAlarm: (id: string, minutes: number) => void
   deleteAlarm: (id: string) => void
+  setRinging: (id: string | null) => void
   addChat: (role: ChatMessage['role'], content: string) => void
   setSettings: (s: Partial<Settings>) => void
   applyBatch: (patch: Partial<Pick<AppData, 'todos' | 'debts' | 'wishlist' | 'alarms'>>) => void
@@ -257,6 +294,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     chatDraft: '',
     listenPending: false,
     ready: false,
+    ringingAlarmId: null,
   })
 
   useEffect(() => {
@@ -436,7 +474,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
   const toggleWishlist = useCallback((id: string) => dispatch({ type: 'TOGGLE_WISHLIST', id }), [])
   const deleteWishlist = useCallback((id: string) => dispatch({ type: 'DELETE_WISHLIST', id }), [])
-  const addAlarm = useCallback((title: string, at: string) => {
+  const addAlarm = useCallback((title: string, at: string, repeat: Alarm['repeat'] = 'none') => {
     dispatch({
       type: 'ADD_ALARM',
       alarm: {
@@ -445,11 +483,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         at,
         fired: false,
         createdAt: new Date().toISOString(),
+        repeat,
       },
     })
   }, [])
   const fireAlarm = useCallback((id: string) => dispatch({ type: 'FIRE_ALARM', id }), [])
+  const snoozeAlarm = useCallback(
+    (id: string, minutes: number) =>
+      dispatch({ type: 'SNOOZE_ALARM', id, at: new Date(Date.now() + minutes * 60_000).toISOString() }),
+    [],
+  )
   const deleteAlarm = useCallback((id: string) => dispatch({ type: 'DELETE_ALARM', id }), [])
+  const setRinging = useCallback((id: string | null) => dispatch({ type: 'SET_RINGING', id }), [])
   const addChat = useCallback((role: ChatMessage['role'], content: string) => {
     dispatch({
       type: 'ADD_CHAT',
@@ -498,7 +543,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteWishlist,
     addAlarm,
     fireAlarm,
+    snoozeAlarm,
     deleteAlarm,
+    setRinging,
     addChat,
     setSettings,
     applyBatch,

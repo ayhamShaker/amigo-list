@@ -1,8 +1,9 @@
-import { Mic, MicOff, Send } from 'lucide-react'
+import { Keyboard, Mic, MicOff, Send } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { askAmigo, speakText, stopSpeaking } from '../amigo'
 import { t } from '../i18n'
 import { useStore } from '../store'
+import { hasWebSpeech, isIOS } from '../utils'
 
 interface SpeechResultLike {
   isFinal: boolean
@@ -47,6 +48,25 @@ export function AmigoView() {
   const busyRef = useRef(false)
 
   const messages = state.data.chat
+  const iosMode = isIOS()
+  const canSpeech = hasWebSpeech()
+
+  const focusComposer = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.focus()
+    try {
+      el.setSelectionRange(el.value.length, el.value.length)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Land ready to type/dictate the moment the talk screen opens
+  useEffect(() => {
+    const id = window.setTimeout(focusComposer, 120)
+    return () => window.clearTimeout(id)
+  }, [])
 
   useEffect(() => {
     dataRef.current = state.data
@@ -77,7 +97,9 @@ export function AmigoView() {
   useEffect(() => {
     if (!state.listenPending) return
     setListenPending(false)
-    setTapToTalk(true)
+    if (canSpeech) setTapToTalk(true)
+    else focusComposer()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.listenPending, setListenPending])
 
   const sendMessage = async (text: string) => {
@@ -166,9 +188,14 @@ export function AmigoView() {
   }
 
   const startListening = () => {
+    // iOS has no usable Web Speech API — use the native keyboard mic instead
+    if (!canSpeech) {
+      focusComposer()
+      return
+    }
     const SpeechCtor = getSpeechRecognition()
     if (!SpeechCtor) {
-      setSpeechError(t('speechUnsupported', lang))
+      focusComposer()
       return
     }
     if (listening) return
@@ -209,6 +236,10 @@ export function AmigoView() {
   }
 
   const toggleListen = () => {
+    if (!canSpeech) {
+      focusComposer()
+      return
+    }
     if (listening) {
       recogRef.current?.stop()
       setListening(false)
@@ -219,7 +250,7 @@ export function AmigoView() {
 
   return (
     <div className="amigo-screen animate-in">
-      {tapToTalk && (
+      {tapToTalk && canSpeech && (
         <button type="button" className="talk-hero mb-3 shrink-0" onClick={() => startListening()}>
           <Mic size={36} className="text-[var(--color-accent)]" />
           <span className="text-lg font-semibold">{t('tapToTalk', lang)}</span>
@@ -262,6 +293,12 @@ export function AmigoView() {
 
       {speechError && <p className="mb-2 text-xs text-[var(--color-warn)]">{speechError}</p>}
 
+      {iosMode && messages.length === 0 && (
+        <p className="mb-2 text-center text-[11px] leading-relaxed text-[var(--color-mute)]">
+          {t('iosTalkHint', lang)}
+        </p>
+      )}
+
       {!state.data.settings.apiKey && (
         <button
           type="button"
@@ -281,10 +318,14 @@ export function AmigoView() {
               ? 'bg-[var(--color-danger)] text-white'
               : 'bg-[var(--color-ink-3)] text-[var(--color-accent)] border border-[var(--color-line)]'
           }`}
-          aria-label={listening ? t('stopListening', lang) : t('holdToTalk', lang)}
-          title={listening ? t('stopListening', lang) : t('holdToTalk', lang)}
+          aria-label={
+            iosMode ? t('tapMicKeyboard', lang) : listening ? t('stopListening', lang) : t('holdToTalk', lang)
+          }
+          title={
+            iosMode ? t('tapMicKeyboard', lang) : listening ? t('stopListening', lang) : t('holdToTalk', lang)
+          }
         >
-          {listening ? <MicOff size={18} /> : <Mic size={18} />}
+          {iosMode ? <Keyboard size={18} /> : listening ? <MicOff size={18} /> : <Mic size={18} />}
         </button>
         <textarea
           ref={textareaRef}

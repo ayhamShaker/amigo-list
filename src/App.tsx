@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { AlarmRing } from './components/AlarmRing'
 import { AlarmsView } from './components/AlarmsView'
 import { AmigoView } from './components/AmigoView'
 import { BottomNav } from './components/BottomNav'
@@ -30,6 +31,9 @@ function Shell() {
     const listen = params.get('listen')
     if (tab && (TABS as string[]).includes(tab)) {
       setTab(tab as Tab)
+    } else if (state.data.settings.openOnTalk && listen !== '1') {
+      // Land straight on the talk screen so the keyboard/dictation is one tap away
+      setTab('amigo')
     }
     if (listen === '1') {
       setListenPending(true)
@@ -38,7 +42,8 @@ function Shell() {
     if (tab || listen) {
       window.history.replaceState({}, '', window.location.pathname || '/')
     }
-  }, [state.ready, setTab, setListenPending])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.ready])
 
   if (!state.ready) {
     return (
@@ -73,6 +78,7 @@ function Shell() {
     <div className="app-shell safe-top">
       <main className="page">{view}</main>
       <BottomNav />
+      <AlarmRing />
     </div>
   )
 }
